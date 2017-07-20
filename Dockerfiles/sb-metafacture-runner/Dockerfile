@@ -1,13 +1,7 @@
 # Set base image
-# FROM base/archlinux:latest
 FROM zenika/alpine-maven:latest
 
-# Refresh package manager
-# RUN pacman-db-upgrade
-# RUN pacman -Syyu --noconfirm
-
 # Install needed applications
-# RUN pacman -S --noconfirm maven jdk8-openjdk
 RUN apk add --update curl bash \
 && rm -rf /var/cache/apk/*
 
@@ -28,8 +22,6 @@ RUN mvn clean package shade:shade -Dmaven.test.skip=true
 RUN mv ./target/swissbibMF-plugins-1.1.jar ${MFRUNNER}/plugins/
 RUN cd .. \
 && rm -r swissbib-metafacture-commands-MF-4.0
-
-# RUN pacman -Rsc --noconfirm maven
 
 RUN mkdir /mfwf
 VOLUME /mfwf
