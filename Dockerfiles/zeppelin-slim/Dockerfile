@@ -5,7 +5,7 @@ ENV VERSION=v8.4.0 \
 NPM_VERSION=5 \
 YARN_VERSION=latest
 
-# For base builds
+# Set up node.js
 ENV CONFIG_FLAGS="--fully-static" DEL_PKGS="libstdc++" RM_DIRS=/usr/include
 
 RUN apk add --no-cache --update bash ca-certificates git curl make gcc g++ python linux-headers binutils-gold gnupg libstdc++ && \
@@ -46,6 +46,7 @@ RUN apk add --no-cache --update bash ca-certificates git curl make gcc g++ pytho
 /root/.npm /root/.node-gyp /root/.gnupg /usr/lib/node_modules/npm/man \
 /usr/lib/node_modules/npm/doc /usr/lib/node_modules/npm/html /usr/lib/node_modules/npm/scripts
 
+# Set up maven
 RUN  find /usr/share/ca-certificates/mozilla/ -name "*.crt" -exec keytool -import -trustcacerts \
   -keystore /usr/lib/jvm/java-1.8-openjdk/jre/lib/security/cacerts -storepass changeit -noprompt \
   -file {} -alias {} \; && \
@@ -69,7 +70,7 @@ Z_HOME="/zeppelin" \
 LANG=en_US.UTF-8 \
 LC_ALL=en_US.UTF-8
 
-# Install metafacture-runner
+# Install Zeppelin
 RUN git clone https://github.com/apache/zeppelin.git
 WORKDIR ./zeppelin
 RUN mvn clean package \
@@ -103,11 +104,10 @@ RUN mvn clean package \
 RUN find bin -type f -name "*.cmd" -exec rm {} \;
 RUN rm -r alluxio angular beam bigquery cassandra dev docs elasticsearch file geode groovy hbase helium-dev ignite jdbc kylin lens LICENSE licenses livy NOTICE pig pom.xml r README.md Roadmap.md scalding scio scripts SECURITY-README.md STYLE.md testing _tools travis_check.py zeppelin-examples .git*
 
-# RUN mkdir /zeppelin
 ADD * /zeppelin/
 VOLUME /zeppelin/notebook
 
-EXPOSE 8080 7077
+EXPOSE 8080
 WORKDIR /zeppelin
 RUN chmod +x bin/zeppelin.sh
 ENTRYPOINT ["/bin/bash", "bin/zeppelin.sh"]
