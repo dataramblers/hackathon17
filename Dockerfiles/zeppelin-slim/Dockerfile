@@ -78,7 +78,6 @@ RUN mvn clean package \
 -Dbuild-distr \
 -Dflink.version=1.3.2 \
 -Pspark-2.1 \
--Psparkr \
 -Pyarn \
 -Phadoop-2.7 \
 -Pscala-2.11 \
