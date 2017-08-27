@@ -75,10 +75,8 @@ RUN git clone https://github.com/apache/zeppelin.git
 WORKDIR ./zeppelin
 RUN mvn clean package \
 -DskipTests \
--Dbuild-distr \
 -Dflink.version=1.3.2 \
 -Pspark-2.1 \
--Pyarn \
 -Phadoop-2.7 \
 -Pscala-2.11 \
 --projects \
