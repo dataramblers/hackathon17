@@ -4,8 +4,8 @@ services:
 
   zookeeper:
     image: wurstmeister/zookeeper
-    ports:
-      - 2181:2181
+    expose:
+      - 2181
     networks:
       - hackathon
 
@@ -23,8 +23,6 @@ services:
 
   jobmanager:
     image: ${FLINK_DOCKER_IMAGE_NAME:-flink}
-    expose:
-      - "6123"
     ports:
       - 6123:6123
       - 8081:8081
@@ -37,8 +35,8 @@ services:
   taskmanager:
     image: ${FLINK_DOCKER_IMAGE_NAME:-flink}
     expose:
-      - "6121"
-      - "6122"
+      - 6121
+      - 6122
     depends_on:
       - jobmanager
     command: taskmanager
