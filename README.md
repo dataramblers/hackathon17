@@ -1,9 +1,57 @@
 # hackathon17
-Files and notes about the Swiss Open Cultural Data Hackathon 2017
+Files and notes about the Swiss Open Cultural Data Hackathon 2017.
+For information about the data, use cases, tools, etc, see the Wiki: https://github.com/dataramblers/hackathon17/wiki
 
 ## Requirements
 
 ### Elasticsearch cluster
 
-see https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html
+* see https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html
 (especially paragraph on production mode)
+
+* Elasticsearch requires increased virtual memory. See: https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html
+
+### Docker
+
+* Docker CE, most recent version
+* recommended: 17.06
+* see also hints.md
+
+### Docker Compose
+
+* most recent version
+* see also hints.md
+
+## Installation notes
+
+The technical environment runs in Docker containers. This enables everyone to run the infrastructure locally on their computers.
+
+### How to install Docker and Docker Compose
+
+The package sources of many (Linux-) distributions do not contain the most recent version of Docker, and do not contain Docker Compose at all. You must most likely install them manually.
+
+1. Install Docker CE, preferably 17.06.
+* https://docs.docker.com/engine/installation/
+* Verify correct installation: `sudo docker run hello-world`
+2. Install Docker-Compose.
+* https://docs.docker.com/compose/install/
+* Check installed version: `docker-compose --version`
+3. Clone this repository.
+* `git clone git@github.com:dataramblers/hackathon17.git`
+4. Increase your virtual memory:
+https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html
+
+### How to run the technical environment in Docker
+
+Use `sudo` for Docker commands.
+
+1. Make sure you have sufficient virtual memory: `sysctl vm.max_map_count` must output 262144.
+* To increase the limits for one session:`sudo sysctl -w vm.max_map_count=262144`
+2. CD to your hackathon17 directory.
+3. `docker-compose up`
+* Docker loads the images and initializes the containers.
+* Elasticsearch cluster: localhost:9200
+* Zeppelin instance: localhost:8080
+* Dashboard of the Flink cluster: localhost8081
+4. If you want to stop and exit the docker containers: `docker-compose down` (in separate terminal)
+
