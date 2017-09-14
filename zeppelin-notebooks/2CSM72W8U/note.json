@@ -1,0 +1,143 @@
+{
+  "paragraphs": [
+    {
+      "text": "%md\n# Dependencies (in Flink interpreter)\n\n* `org.culturegraph:metafacture-core:4.0.0`\n* `swissbibMF-plugins-1.1-plugin.jar` (contained in directory)",
+      "user": "anonymous",
+      "dateUpdated": "2017-09-14 20:36:20.840",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": false,
+        "results": {},
+        "editorSetting": {
+          "language": "markdown",
+          "editOnDblClick": true
+        },
+        "editorMode": "ace/mode/markdown",
+        "editorHide": true,
+        "tableHide": false
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "HTML",
+            "data": "\u003cdiv class\u003d\"markdown-body\"\u003e\n\u003ch1\u003eDependencies (in Flink interpreter)\u003c/h1\u003e\n\u003cul\u003e\n  \u003cli\u003e\u003ccode\u003eorg.culturegraph:metafacture-core:4.0.0\u003c/code\u003e\u003c/li\u003e\n  \u003cli\u003e\u003ccode\u003eswissbibMF-plugins-1.1-plugin.jar\u003c/code\u003e (contained in directory)\u003c/li\u003e\n\u003c/ul\u003e\n\u003c/div\u003e"
+          }
+        ]
+      },
+      "apps": [],
+      "jobName": "paragraph_1505421211793_536623538",
+      "id": "20170914-203331_408529862",
+      "dateCreated": "2017-09-14 20:33:31.793",
+      "dateStarted": "2017-09-14 20:36:06.017",
+      "dateFinished": "2017-09-14 20:36:07.448",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "text": "%flink\nval morphDef \u003d\n\"\"\"\n\u003cmetamorph xmlns\u003d\"http://www.culturegraph.org/metamorph\" version\u003d\"1\"\u003e\n\u003crules\u003e\n\u003cdata source\u003d\"001\" name\u003d\"name\"/\u003e\n\u003c/rules\u003e\n\u003c/metamorph\u003e\n\"\"\"\n\nval url \u003d \"http://sru.swissbib.ch/sru/search/defaultdb?query\u003d\u0026operation\u003dsearchRetrieve\u0026recordSchema\u003dinfo%3Asrw%2Fschema%2F1%2Fmarcxml-v1.1-light\u0026maximumRecords\u003d${cs}\u0026startRecord\u003d${pa}\u0026recordPacking\u003dXML\u0026availableDBs\u003ddefaultdb\u0026sortKeys\u003dSubmit+query\"",
+      "user": "anonymous",
+      "dateUpdated": "2017-09-14 20:33:31.900",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "morphDef: String \u003d\n\"\n\u003cmetamorph xmlns\u003d\"http://www.culturegraph.org/metamorph\" version\u003d\"1\"\u003e\n\u003crules\u003e\n\u003cdata source\u003d\"001\" name\u003d\"name\"/\u003e\n\u003c/rules\u003e\n\u003c/metamorph\u003e\n\"\nurl: String \u003d http://sru.swissbib.ch/sru/search/defaultdb?query\u003d\u0026operation\u003dsearchRetrieve\u0026recordSchema\u003dinfo%3Asrw%2Fschema%2F1%2Fmarcxml-v1.1-light\u0026maximumRecords\u003d${cs}\u0026startRecord\u003d${pa}\u0026recordPacking\u003dXML\u0026availableDBs\u003ddefaultdb\u0026sortKeys\u003dSubmit+query\n"
+          }
+        ]
+      },
+      "apps": [],
+      "jobName": "paragraph_1505402522089_-397188133",
+      "id": "20170914-152202_1164204481",
+      "dateCreated": "2017-09-14 15:22:02.089",
+      "dateStarted": "2017-09-14 20:16:39.311",
+      "dateFinished": "2017-09-14 20:16:51.875",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "text": "%flink\n\nimport org.swissbib.linked.mf.source.MultiHttpOpener\nimport org.culturegraph.mf.xml.XmlDecoder\nimport org.swissbib.linked.mf.decoder.MarcXmlSruHandler\nimport org.culturegraph.mf.metamorph.Metamorph\nimport org.culturegraph.mf.triples.StreamToTriples\nimport org.culturegraph.mf.formatting.ObjectTemplate\nimport org.swissbib.linked.mf.writer.ContinuousCsvWriter\nimport java.io.ByteArrayInputStream\nimport org.culturegraph.mf.json.JsonEncoder\nimport org.culturegraph.mf.io.ObjectWriter\nimport org.culturegraph.mf.framework.objects.Triple\n\nval openMultiHttp \u003d new MultiHttpOpener\nopenMultiHttp.setLowerBound(\"0\")\nopenMultiHttp.setUpperBound(\"50\")\nopenMultiHttp.setChunkSize(\"20\")\n\nval xmlDecoder \u003d new XmlDecoder\nval marcXmlSruHandler \u003d new MarcXmlSruHandler\nval morph: Metamorph \u003d new Metamorph(new ByteArrayInputStream(morphDef.getBytes(\"utf-8\")))\n/* Another approach:\nimport org.culturegraph.mf.metamorph.InlineMorph\nval morph: Metamorph \u003d InlineMorph\n.in(this)\n.`with`(\"\u003crules\u003e\")\n.`with`(\"\u003cdata source\u003d\u0027001\u0027 name\u003d\u0027name\u0027/\u003e\")\n.`with`(\u0027\u003c/rules\u003e\u0027)\n.create()\n*/\n\nval streamToTriples \u003d new StreamToTriples\nstreamToTriples.setRedirect(true)\n\nval template: ObjectTemplate[Triple] \u003d new ObjectTemplate(\"\\\"${s}\\\",\\\"${p}\\\",\\\"${o}\\\"\")\n\nval jsonEncoder \u003d new JsonEncoder\nval writer: ObjectWriter[String] \u003d new ObjectWriter(\"/zeppelin/notebook/test.json\")\n\nval writeCsv: ContinuousCsvWriter[String] \u003d new ContinuousCsvWriter\nwriteCsv.setPath(\"/zeppelin/notebook\")\nwriteCsv.setLinesPerFile(\"1000000\")\nwriteCsv.setContinuousFile(\"true\")\nwriteCsv.setFiletype(\"csv\")\nwriteCsv.setFilenamePrefix(\"sb\")\n\nopenMultiHttp\n.setReceiver(xmlDecoder)\n.setReceiver(marcXmlSruHandler)\n.setReceiver(morph)\n.setReceiver(streamToTriples)\n.setReceiver(template)\n//.setReceiver(jsonEncoder)\n//.setReceiver(writer)\n.setReceiver(writeCsv)\n\nopenMultiHttp.process(url)",
+      "user": "anonymous",
+      "dateUpdated": "2017-09-14 20:39:17.238",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "import org.swissbib.linked.mf.source.MultiHttpOpener\nimport org.culturegraph.mf.xml.XmlDecoder\nimport org.swissbib.linked.mf.decoder.MarcXmlSruHandler\nimport org.culturegraph.mf.metamorph.Metamorph\nimport org.culturegraph.mf.triples.StreamToTriples\nimport org.culturegraph.mf.formatting.ObjectTemplate\nimport org.swissbib.linked.mf.writer.ContinuousCsvWriter\nimport java.io.ByteArrayInputStream\nimport org.culturegraph.mf.json.JsonEncoder\nimport org.culturegraph.mf.io.ObjectWriter\nimport org.culturegraph.mf.framework.objects.Triple\nopenMultiHttp: org.swissbib.linked.mf.source.MultiHttpOpener \u003d org.swissbib.linked.mf.source.MultiHttpOpener@22856243\nxmlDecoder: org.culturegraph.mf.xml.XmlDecoder \u003d org.culturegraph.mf.xml.XmlDecoder@71b261a3\nmarcXmlSruHandler: org.swissbib.linked.mf.decoder.MarcXmlSruHandler \u003d org.swissbib.linked.mf.decoder.MarcXmlSruHandler@1566acfd\nmorph: org.culturegraph.mf.metamorph.Metamorph \u003d org.culturegraph.mf.metamorph.Metamorph@21df15bd\nstreamToTriples: org.culturegraph.mf.triples.StreamToTriples \u003d org.culturegraph.mf.triples.StreamToTriples@6d734706\ntemplate: org.culturegraph.mf.formatting.ObjectTemplate[org.culturegraph.mf.framework.objects.Triple] \u003d org.culturegraph.mf.formatting.ObjectTemplate@28508216\njsonEncoder: org.culturegraph.mf.json.JsonEncoder \u003d org.culturegraph.mf.json.JsonEncoder@167cfb77\nwriter: org.culturegraph.mf.io.ObjectWriter[String] \u003d org.culturegraph.mf.io.ObjectWriter@2cec8929\nwriteCsv: org.swissbib.linked.mf.writer.ContinuousCsvWriter[String] \u003d org.swissbib.linked.mf.writer.ContinuousCsvWriter@4dbededb\nres103: org.swissbib.linked.mf.writer.ContinuousCsvWriter[String] \u003d org.swissbib.linked.mf.writer.ContinuousCsvWriter@4dbededb\n"
+          }
+        ]
+      },
+      "apps": [],
+      "jobName": "paragraph_1505395566055_809823958",
+      "id": "20170914-132606_1486847852",
+      "dateCreated": "2017-09-14 13:26:06.055",
+      "dateStarted": "2017-09-14 20:39:17.256",
+      "dateFinished": "2017-09-14 20:39:20.690",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "text": "%flink\n",
+      "user": "anonymous",
+      "dateUpdated": "2017-09-14 13:37:38.916",
+      "config": {},
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "jobName": "paragraph_1505396258900_-1545041813",
+      "id": "20170914-133738_1972993961",
+      "dateCreated": "2017-09-14 13:37:38.900",
+      "status": "READY",
+      "progressUpdateIntervalMs": 500
+    }
+  ],
+  "name": "metafacture",
+  "id": "2CSM72W8U",
+  "angularObjects": {
+    "2CSVFTMC5:shared_process": [],
+    "2CSEDP3RX:shared_process": [],
+    "2CSX21WA4:shared_process": [],
+    "2CS759DHN:shared_process": []
+  },
+  "config": {},
+  "info": {}
+}
