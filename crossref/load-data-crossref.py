@@ -15,12 +15,12 @@ doctype = 'crossref'
 es = Elasticsearch()
 cache = list()
 counter = 0
-bulksize = 10000
+bulksize = 30000
 
 for dirname, dirnames, filenames in os.walk(argv[1]):
     for filename in filenames:
         if filename.endswith('json.gz'):
-            with gzip.open(os.path.join(argv[1],filename), 'rb') as f:
+            with gzip.open(os.path.join(dirname,filename), 'rb') as f:
                 for l in f:
                     bigjsonobject = json.loads(l)
                     for jsonobj in bigjsonobject:
@@ -37,5 +37,5 @@ for dirname, dirnames, filenames in os.walk(argv[1]):
                         counter = counter + 1
                         if counter >= bulksize:
                             es.bulk(index=index, doc_type=doctype, body='\n'.join(cache))
-                        cache = []
-                        counter = 0
+                            cache = []
+                            counter = 0
