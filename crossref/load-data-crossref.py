@@ -7,17 +7,22 @@ import gzip
 import pyisbn
 import os
 
-# def isbn10toisbn13(isbn10):
-#     isbn13 = '978' + isbn10.replace('-', '')[0:9]
-#     s = sum([(int(isbn13[i]) - 48) * 1 if i % 2 == 0 else 3 for i in range(0, len(isbn13))])
-#     return isbn13 + str(10 - (s % 10))
+def removeAffiliation(parentJsonObj):
+    '''
+    Removes `affiliation` field in embedded person object
+    :param parentJsonObj: Either 'author' or 'editor'
+    :return:
+    '''
+    if parentJsonObj in jsonobj.keys():
+        for t in jsonobj[parentJsonObj]:
+            t.pop('affiliation', None)
 
 index = 'crossref'
 doctype = 'crossref'
 es = Elasticsearch()
 cache = list()
 counter = 0
-bulksize = 100000
+bulksize = 30000
 
 for dirname, dirnames, filenames in os.walk(argv[1]):
     for filename in filenames:
@@ -33,6 +38,8 @@ for dirname, dirnames, filenames in os.walk(argv[1]):
                                 if len(isbn.replace('-','')) == 10:
                                     isbnlist.append(pyisbn.convert(isbn))
                             jsonobj['ISBN'] = isbnlist
+                        removeAffiliation('author')
+                        removeAffiliation('editor')
                         header = '{ "index" : { "_index" : "' + index + '", "_type" : "' + doctype + '", "_id" : "' + str(hash(id)) + '" } }'
                         cache.append(header)
                         cache.append(json.dumps(jsonobj))
