@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from elasticsearch import Elasticsearch
 from sys import argv
 import json
@@ -15,7 +17,7 @@ doctype = 'crossref'
 es = Elasticsearch()
 cache = list()
 counter = 0
-bulksize = 30000
+bulksize = 100000
 
 for dirname, dirnames, filenames in os.walk(argv[1]):
     for filename in filenames:
