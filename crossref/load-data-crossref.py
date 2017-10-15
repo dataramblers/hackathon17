@@ -1,41 +1,105 @@
 from elasticsearch import Elasticsearch
-from sys import argv
 import json
 import gzip
 import pyisbn
 import os
+import time
+import argparse
+from tqdm import tqdm
 
-# def isbn10toisbn13(isbn10):
-#     isbn13 = '978' + isbn10.replace('-', '')[0:9]
-#     s = sum([(int(isbn13[i]) - 48) * 1 if i % 2 == 0 else 3 for i in range(0, len(isbn13))])
-#     return isbn13 + str(10 - (s % 10))
 
-index = 'crossref'
-doctype = 'crossref'
-es = Elasticsearch()
-cache = list()
-counter = 0
-bulksize = 10000
+class Importer:
 
-for dirname, dirnames, filenames in os.walk(argv[1]):
-    for filename in filenames:
-        if filename.endswith('json.gz'):
-            with gzip.open(os.path.join(argv[1],filename), 'rb') as f:
-                for l in f:
-                    bigjsonobject = json.loads(l)
-                    for jsonobj in bigjsonobject:
-                        id = jsonobj['DOI']
-                        if 'ISBN' in jsonobj.keys():
-                            isbnlist = list()
-                            for isbn in jsonobj['ISBN']:
-                                if len(isbn.replace('-','')) == 10:
-                                    isbnlist.append(pyisbn.convert(isbn))
-                            jsonobj['ISBN'] = isbnlist
-                        header = '{ "index" : { "_index" : "' + index + '", "_type" : "' + doctype + '", "_id" : "' + str(hash(id)) + '" } }'
-                        cache.append(header)
-                        cache.append(json.dumps(jsonobj))
-                        counter = counter + 1
-                        if counter >= bulksize:
-                            es.bulk(index=index, doc_type=doctype, body='\n'.join(cache))
-                        cache = []
-                        counter = 0
+    """
+    A simple class to build a elastic search index for the crossref data
+    """
+
+    def __init__(self, es_host="localhost", es_port=9200):
+        self.es = Elasticsearch(hosts=[{'host': es_host, 'port': es_port}],)
+
+    def batch(self, index, doc_type, body, counter=0):
+        """
+        Load data into the index
+        :param index: Name of the index
+        :param doc_type: Name of the doc_type
+        :param body: Data to index
+        :param counter: internal counter for failure retry
+        :return:
+        """
+        try:
+            self.es.bulk(index=index, doc_type=doc_type, body=body)
+        except Exception:
+            print("Error: Failed to import a part of the data set. "
+                  "Try again to import segment for the {} time".format(counter + 1))
+            time.sleep(10)
+            counter += 1
+            self.batch(index, doc_type, body, counter)
+
+    def bootstrap(self, index, doc_type, mapping_file="mapping.json"):
+        """
+        Bootstrap es index. Delete existing index and create a new one with mapping
+        :param index: Name of the index
+        :param doc_type: Name of the doc_type
+        :param mapping_file: The definition for the mapping
+        :return:
+        """
+        mapping = open(mapping_file).read()
+        if self.es.indices.exists(index):
+            self.es.indices.delete(index)
+        self.es.indices.create(index, mapping)
+
+    def load(self, directory, index="crossref", doc_type="crossref", bulk_size=50000):
+        """
+        Load data for a file into Es-Index
+        :param directory: The path for the directory with the data
+        :param index: Name of the index
+        :param doc_type: Name of the doc_type
+        :param bulk_size: The bulksize for committing the data into the es index
+        :return:
+        """
+        cache = list()
+        counter = 0
+        total = len([name for name in os.listdir(directory) if os.path.join(directory, name) and name.endswith('json.gz')])
+        with tqdm(total=total) as pbar:
+            for root, dir_names, file_names in os.walk(directory):
+                for filename in file_names:
+                    if filename.endswith('json.gz'):
+                        pbar.update()
+                        with gzip.open(os.path.join(root, filename), 'rb') as f:
+                            json_objects = json.loads(f.read())
+                            for json_object in json_objects:
+                                doc_id = json_object['DOI']
+                                # convert isbn numbers
+                                if 'ISBN' in json_object.keys():
+                                    isbn_list = list()
+                                    for isbn in json_object['ISBN']:
+                                        if len(isbn.replace('-', '')) == 10:
+                                            isbn_list.append(pyisbn.convert(isbn))
+                                    json_object['ISBN'] = isbn_list
+                                header = '{ "index" : { "_index" : "' + index + '", "_type" : "' + doc_type + '", "_id" : "' + str(hash(doc_id)) + '" } }'
+                                cache.append(header)
+                                cache.append(json.dumps(json_object))
+                                counter += 1
+                                if counter >= bulk_size:
+                                    self.batch(index, doc_type, "\n".join(cache))
+                                    cache = []
+                                    counter = 0
+        pbar.close()
+
+
+parser = argparse.ArgumentParser(description='Load json data fro crossref into an elastic search index.')
+parser.add_argument('data', type=str, help='Path to the gziped data')
+parser.add_argument('--es-host', type=str, help='Elastic search uri', default="localhost")
+parser.add_argument('--es-port', type=int, help='Elastic search uri', default=9200)
+parser.add_argument('--es-index',  type=str, help='Elastic search index', default="crossref")
+parser.add_argument('--es-doc-type',  type=str, help='Elastic search doctype', default="crossref")
+parser.add_argument('--es-flush',  type=bool, help='Flush and create the elastic search index', default=False)
+parser.add_argument('--mapping-file',  type=str, help='Mapping file for the index', default="mapping.json")
+parser.add_argument('--bulk-size', type=int, help='Bulk size for the import', default=50000)
+args = parser.parse_args()
+importer = Importer(args.es_host, args.es_port)
+# flush data and create index
+if args.es_flush:
+    importer.bootstrap(args.es_index, args.es_doc_type, args.mapping_file)
+
+importer.load(args.data, args.es_index, args.es_doc_type, args.bulk_size)
