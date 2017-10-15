@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from elasticsearch import Elasticsearch
 import json
 import gzip
@@ -48,6 +50,18 @@ class Importer:
             self.es.indices.delete(index)
         self.es.indices.create(index, mapping)
 
+    def remove_affiliation(self, json_object, parent_json_obj):
+        """
+        Removes `affiliation` field in embedded person object
+        :param json_object: The current json object
+        :param parent_json_obj: Either 'author' or 'editor'
+        :return:
+        """
+        if parent_json_obj in json_object.keys():
+            for t in json_object[parent_json_obj]:
+                t.pop('affiliation', None)
+        return json_object
+
     def load(self, directory, index="crossref", doc_type="crossref", bulk_size=50000):
         """
         Load data for a file into Es-Index
@@ -76,6 +90,8 @@ class Importer:
                                         if len(isbn.replace('-', '')) == 10:
                                             isbn_list.append(pyisbn.convert(isbn))
                                     json_object['ISBN'] = isbn_list
+                                json_object = self.remove_affiliation(json_object, 'author')
+                                json_object = self.remove_affiliation(json_object, 'editor')
                                 header = '{ "index" : { "_index" : "' + index + '", "_type" : "' + doc_type + '", "_id" : "' + str(hash(doc_id)) + '" } }'
                                 cache.append(header)
                                 cache.append(json.dumps(json_object))
@@ -101,5 +117,5 @@ importer = Importer(args.es_host, args.es_port)
 # flush data and create index
 if args.es_flush:
     importer.bootstrap(args.es_index, args.es_doc_type, args.mapping_file)
-
+# import data
 importer.load(args.data, args.es_index, args.es_doc_type, args.bulk_size)
