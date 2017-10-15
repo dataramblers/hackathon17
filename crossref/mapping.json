@@ -1,0 +1,148 @@
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "issn_analyser": {
+          "tokenizer": "whitespace",
+          "filter": [
+            "lowercase",
+            "trim"
+          ],
+          "char_filter": [
+            "replace_hyphen"
+          ]
+        },
+        "family_analyser": {
+          "tokenizer": "whitespace",
+          "filter": [
+            "lowercase",
+            "trim",
+            "asciifolding"
+          ],
+          "char_filter": [
+            "replace_hyphen"
+          ]
+        },
+          "given_analyser": {
+          "tokenizer": "whitespace",
+          "filter": [
+            "lowercase",
+            "first_character",
+            "trim",
+            "asciifolding"
+          ],
+          "char_filter": [
+            "replace_hyphen",
+            "replace_point"
+          ]
+        },
+        "title_analyser": {
+          "tokenizer": "whitespace",
+          "filter": [
+            "de_stop",
+            "en_stop",
+            "fr_stop",
+            "lowercase",
+            "trim",
+            "asciifolding"
+          ],
+          "char_filter": [
+            "replace_quotes",
+            "replace_hyphen"
+          ]
+        }
+      },
+      "char_filter": {
+        "replace_hyphen": {
+          "type": "mapping",
+          "mappings": [
+            "-=>"
+          ]
+        },
+        "replace_point": {
+          "type": "mapping",
+          "mappings": [
+            ".=>"
+          ]
+        },
+        "replace_quotes": {
+          "type": "mapping",
+          "mappings": [
+            "\\u0091=>\u0027",
+            "\\u0092=>\u0027",
+            "\\u2018=>\u0027",
+            "\\u2019=>\u0027",
+            "\\u00AB=>\u0027",
+            "\\u00BB=>\u0027",
+            "\\u2039=>\u0027",
+            "\\u203A=>\u0027",
+            "\\uFF07=>\u0027"
+          ]
+        }
+      },
+      "filter": {
+        "first_character": {
+          "type": "edgeNGram",
+          "min_gram": 1,
+          "max_gram": 1
+        },
+        "en_stop": {
+          "type": "stop",
+          "stopwords": "_english_"
+        },
+        "de_stop": {
+          "type": "stop",
+          "stopwords": "_german_"
+        },
+        "fr_stop": {
+          "type": "stop",
+          "stopwords": "_french_"
+        }
+      }
+    }
+  },
+  "mappings": {
+    "crossref": {
+      "properties": {
+        "author": {
+          "type": "object",
+          "properties": {
+            "family": {
+              "analyzer": "family_analyser",
+              "type": "string"
+            },
+            "given": {
+              "analyzer": "given_analyser",
+              "type": "string"
+            }
+          }
+        },
+        "editor": {
+          "type": "object",
+          "properties": {
+            "family": {
+              "analyzer": "family_analyser",
+              "type": "string"
+            },
+            "given": {
+              "analyzer": "given_analyser",
+              "type": "string"
+            }
+          }
+        },
+        "title": {
+          "analyzer": "title_analyser",
+          "type": "string"
+        },
+        "isbn": {
+          "analyzer": "issn_analyser",
+          "type": "string"
+        },
+        "issn": {
+          "analyzer": "issn_analyser",
+          "type": "string"
+        }
+      }
+    }
+  }
+}
