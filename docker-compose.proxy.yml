@@ -1,0 +1,24 @@
+version: "2.1"
+
+services:
+  proxy:
+    image: jwilder/nginx-proxy
+    ports:
+      - 80:80
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+
+  jobmanager:
+    environment:
+      - VIRTUAL_HOST=jobmanager.dataramblers.dev
+      - VIRTUAL_PORT=8081
+
+  zeppelin:
+    environment:
+      - VIRTUAL_HOST=zeppelin.dataramblers.dev
+      - VIRTUAL_PORT=8080
+
+  elasticsearch1:
+    environment:
+      - VIRTUAL_HOST=elasticsearch.dataramblers.dev
+      - VIRTUAL_PORT=9200

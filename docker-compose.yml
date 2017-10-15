@@ -6,8 +6,6 @@ services:
     image: wurstmeister/zookeeper
     expose:
       - 2181
-    networks:
-      - hackathon
 
   kafka:
     image: wurstmeister/kafka
@@ -18,19 +16,15 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
     volumes:
       - kafka-socket:/var/run/docker.sock
-    networks:
-      - hackathon
 
   jobmanager:
     image: ${FLINK_DOCKER_IMAGE_NAME:-flink}
     ports:
       - 6123:6123
-      - 8081:8081
+      - 8081
     command: jobmanager
     environment:
       - JOB_MANAGER_RPC_ADDRESS=jobmanager
-    networks:
-      - hackathon
 
   taskmanager:
     image: ${FLINK_DOCKER_IMAGE_NAME:-flink}
@@ -45,15 +39,11 @@ services:
       - "zeppelin:zeppelin"
     environment:
       - JOB_MANAGER_RPC_ADDRESS=jobmanager
-    networks:
-      - hackathon
 
   zeppelin:
     image: dataramblers/zeppelin-arch:latest
     ports:
       - 8080:8080
-    networks:
-      - hackathon
     volumes:
       - zeppelin-notebooks:/zeppelin/notebook
       - zeppelin-conf:/zeppelin/conf
@@ -66,7 +56,8 @@ services:
       - cluster.name=docker-cluster
       - bootstrap.memory_lock=true
       - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+
     ulimits:
       memlock:
         soft: -1
@@ -74,16 +65,14 @@ services:
 #       nofile:  # Only ES v.5.2.2
 #         soft: 65536
 #         hard: 65536
-    mem_limit: 1g
+    mem_limit: 4g
 #     cap_add: # Only ES v.5.2.2
 #       - IPC_LOCK
     volumes:
       - esdata1:/usr/share/elasticsearch/data
     ports:
       - 9200:9200
-      - 9300:9300
-    networks:
-      - hackathon
+      - 9300
 
   elasticsearch2:
     image: docker.elastic.co/elasticsearch/elasticsearch:5.5.2
@@ -91,7 +80,7 @@ services:
       - cluster.name=docker-cluster
       - bootstrap.memory_lock=true
       - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "ES_JAVA_OPTS=-Xms2g -Xm2g"
       - "discovery.zen.ping.unicast.hosts=elasticsearch1"
     ulimits:
       memlock:
@@ -100,13 +89,11 @@ services:
 # nofile:  # Only ES v.5.2.2
 #        soft: 65536
 #        hard: 65536
-    mem_limit: 1g
+    mem_limit: 4g
 #    cap_add: # Only ES v.5.2.2
 #      - IPC_LOCK
     volumes:
       - esdata2:/usr/share/elasticsearch/data
-    networks:
-       - hackathon
 
 volumes:
   esdata1:
@@ -123,4 +110,4 @@ volumes:
     driver: local
 
 networks:
-  hackathon:
+  default:
