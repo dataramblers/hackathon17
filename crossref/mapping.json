@@ -1,5 +1,7 @@
 {
+  "index_patterns": ["crossref"],
   "settings": {
+    "number_of_shards": 1,
     "analysis": {
       "analyzer": {
         "issn_analyser": {
@@ -109,11 +111,21 @@
           "properties": {
             "family": {
               "analyzer": "family_analyser",
-              "type": "string"
+              "type": "text",
+              "fields": {
+                "keyword": {
+                  "type": "keyword"
+                }
+              }
             },
             "given": {
               "analyzer": "given_analyser",
-              "type": "string"
+              "type": "text",
+              "fields": {
+                "keyword": {
+                  "type": "keyword"
+                }
+              }
             }
           }
         },
@@ -122,25 +134,50 @@
           "properties": {
             "family": {
               "analyzer": "family_analyser",
-              "type": "string"
+              "type": "text",
+              "fields": {
+                "keyword": {
+                  "type": "keyword"
+                }
+              }
             },
             "given": {
               "analyzer": "given_analyser",
-              "type": "string"
+              "type": "text",
+              "fields": {
+                "keyword": {
+                  "type": "keyword"
+                }
+              }
             }
           }
         },
         "title": {
           "analyzer": "title_analyser",
-          "type": "string"
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword"
+            }
+          }
         },
         "isbn": {
           "analyzer": "issn_analyser",
-          "type": "string"
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword"
+            }
+          }
         },
         "issn": {
           "analyzer": "issn_analyser",
-          "type": "string"
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword"
+            }
+          }
         }
       }
     }
