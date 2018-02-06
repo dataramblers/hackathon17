@@ -52,7 +52,8 @@
           ],
           "char_filter": [
             "replace_quotes",
-            "replace_hyphen"
+            "replace_hyphen",
+            "remove_point"
           ]
         }
       },
@@ -66,7 +67,8 @@
         "remove_point": {
           "type": "mapping",
           "mappings": [
-            ".=>"
+            ".=>",
+            ":=>"
           ]
         },
         "replace_quotes": {
@@ -110,7 +112,7 @@
     "crossref": {
       "properties": {
         "author": {
-          "type": "nested",
+          "type": "object",
           "properties": {
             "family": {
               "analyzer": "family_analyser",
@@ -133,7 +135,7 @@
           }
         },
         "editor": {
-          "type": "nested",
+          "type": "object",
           "properties": {
             "family": {
               "analyzer": "family_analyser",

@@ -62,7 +62,7 @@ class Importer:
         return json_object
 
     def remove_unused_fields(self, json_object: dict):
-        used_fields = ['ISBN', 'ISSN', 'title', 'author', 'editor', 'subtitle', 'DOI', 'funder']
+        used_fields = ['ISBN', 'ISSN', 'title', 'author', 'editor', 'subtitle', 'DOI', 'funder', 'published-print']
         removal_keys = list()
         for key in json_object:
             if not used_fields.__contains__(key):
@@ -85,48 +85,48 @@ class Importer:
         """
         cache = list()
         counter = 0
-        total = len([name for name in os.listdir(directory) if os.path.join(directory, name) and name.endswith('json.xz')])
-        with tqdm(total=total) as pbar_o:
-            for root, dir_names, file_names in os.walk(directory):
-                for filename in file_names:
-                    if filename.endswith('json.xz'):
-                        print("OPEN FILE")
-                        pbar_o.update()
-                        with lzma.open(os.path.join(root, filename), 'rt', encoding='utf-8') as f:
+        # total = len([name for name in os.listdir(directory) if os.path.join(directory, name) and name.endswith('json.xz')])
+        # with tqdm(total=total) as pbar_o:
+        for root, dir_names, file_names in os.walk(directory):
+            for filename in file_names:
+                if filename.endswith('json.xz'):
+                    print("OPEN FILE")
+                    # pbar_o.update()
+                    with lzma.open(os.path.join(root, filename), 'rt', encoding='utf-8') as f:
+                        line = f.readline()
+                        while line:
+                            json_object = json.loads(line)
+                            # json_object['oid'] = json_object['_id']['$oid']
+                            # del json_object['_id']
+                            doc_id = json_object['DOI']
+                            # convert isbn numbers
+                            if 'ISBN' in json_object.keys():
+                                isbn_list = list()
+                                for isbn in json_object['ISBN']:
+                                    if len(isbn.replace('-', '')) == 10:
+                                        isbn_list.append(pyisbn.convert(isbn))
+                                json_object['ISBN'] = isbn_list
+                            json_object = self.remove_affiliation(json_object, 'author')
+                            json_object = self.remove_affiliation(json_object, 'editor')
+                            json_object = self.remove_unused_fields(json_object)
+                            data = dict()
+                            data['_op_type'] = 'index'
+                            data['_index'] = index
+                            data['_type'] = doc_type
+                            data['_id'] = doc_id
+                            data['_source'] = json_object
+                            cache.append(data)
+                            counter += 1
+                            if counter >= bulk_size:
+                                self.batch(cache)
+                                cache = []
+                                counter = 0
                             line = f.readline()
-                            while line:
-                                json_object = json.loads(line)
-                                json_object['oid'] = json_object['_id']['$oid']
-                                del json_object['_id']
-                                doc_id = json_object['DOI']
-                                # convert isbn numbers
-                                if 'ISBN' in json_object.keys():
-                                    isbn_list = list()
-                                    for isbn in json_object['ISBN']:
-                                        if len(isbn.replace('-', '')) == 10:
-                                            isbn_list.append(pyisbn.convert(isbn))
-                                    json_object['ISBN'] = isbn_list
-                                json_object = self.remove_affiliation(json_object, 'author')
-                                json_object = self.remove_affiliation(json_object, 'editor')
-                                json_object = self.remove_unused_fields(json_object)
-                                data = dict()
-                                data['_op_type'] = 'index'
-                                data['_index'] = index
-                                data['_type'] = doc_type
-                                data['_id'] = doc_id
-                                data['_source'] = json_object
-                                cache.append(data)
-                                counter += 1
-                                if counter >= bulk_size:
-                                    self.batch(cache)
-                                    cache = []
-                                    counter = 0
-                                line = f.readline()
-                        # after each file write down what keys were deleted.
-                        with open('logging/deleted_keys.txt', 'w', encoding='utf-8') as file:
-                            for key in self.deleted_key:
-                                file.write(key + '\n')
-        pbar_o.close()
+                    # after each file write down what keys were deleted.
+                    with open('logging/deleted_keys.txt', 'w', encoding='utf-8') as file:
+                        for key in self.deleted_key:
+                            file.write(key + '\n')
+        # pbar_o.close()
 
 
 parser = argparse.ArgumentParser(description='Load json data fro crossref into an elastic search index.')
