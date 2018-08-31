@@ -1,5 +1,7 @@
 {
+  "index_patterns": ["crossref"],
   "settings": {
+    "number_of_shards": 1,
     "analysis": {
       "analyzer": {
         "issn_analyser": {
@@ -23,7 +25,8 @@
             "replace_hyphen"
           ]
         },
-          "given_analyser": {
+        "given_analyser": {
+          "type": "custom",
           "tokenizer": "whitespace",
           "filter": [
             "lowercase",
@@ -33,10 +36,11 @@
           ],
           "char_filter": [
             "replace_hyphen",
-            "replace_point"
+            "remove_point"
           ]
         },
         "title_analyser": {
+          "type": "custom",
           "tokenizer": "whitespace",
           "filter": [
             "de_stop",
@@ -48,7 +52,8 @@
           ],
           "char_filter": [
             "replace_quotes",
-            "replace_hyphen"
+            "replace_hyphen",
+            "remove_point"
           ]
         }
       },
@@ -56,13 +61,14 @@
         "replace_hyphen": {
           "type": "mapping",
           "mappings": [
-            "-=>"
+            "-=> "
           ]
         },
-        "replace_point": {
+        "remove_point": {
           "type": "mapping",
           "mappings": [
-            ".=>"
+            ".=>",
+            ":=>"
           ]
         },
         "replace_quotes": {
@@ -76,7 +82,8 @@
             "\\u00BB=>\u0027",
             "\\u2039=>\u0027",
             "\\u203A=>\u0027",
-            "\\uFF07=>\u0027"
+            "\\uFF07=>\u0027",
+            "\\u0022=>\u0027"
           ]
         }
       },
@@ -109,11 +116,21 @@
           "properties": {
             "family": {
               "analyzer": "family_analyser",
-              "type": "string"
+              "type": "text",
+              "fields": {
+                "keyword": {
+                  "type": "keyword"
+                }
+              }
             },
             "given": {
               "analyzer": "given_analyser",
-              "type": "string"
+              "type": "text",
+              "fields": {
+                "keyword": {
+                  "type": "keyword"
+                }
+              }
             }
           }
         },
@@ -122,25 +139,50 @@
           "properties": {
             "family": {
               "analyzer": "family_analyser",
-              "type": "string"
+              "type": "text",
+              "fields": {
+                "keyword": {
+                  "type": "keyword"
+                }
+              }
             },
             "given": {
               "analyzer": "given_analyser",
-              "type": "string"
+              "type": "text",
+              "fields": {
+                "keyword": {
+                  "type": "keyword"
+                }
+              }
             }
           }
         },
         "title": {
           "analyzer": "title_analyser",
-          "type": "string"
+          "type": "text",
+          "fields": {
+            "standard": {
+              "type": "text"
+            }
+          }
         },
-        "isbn": {
+        "ISBN": {
           "analyzer": "issn_analyser",
-          "type": "string"
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword"
+            }
+          }
         },
-        "issn": {
+        "ISSN": {
           "analyzer": "issn_analyser",
-          "type": "string"
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword"
+            }
+          }
         }
       }
     }
